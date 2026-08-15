@@ -9,9 +9,9 @@ import (
 	"time"
 
 	aegean "github.com/pigfox/aegean-solver"
+	"github.com/pigfox/aegean-solver/ferry"
 	"github.com/pigfox/aegean-solver/internal/config"
-	"github.com/pigfox/aegean-solver/internal/ferry"
-	"github.com/pigfox/aegean-solver/internal/vocab"
+	"github.com/pigfox/aegean-solver/vocab"
 )
 
 // The generator below produces SCHEDULE-SHAPED NOISE and nothing else. Its

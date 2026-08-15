@@ -5,7 +5,7 @@ import (
 	"math"
 	"slices"
 
-	"github.com/pigfox/aegean-solver/internal/vocab"
+	"github.com/pigfox/aegean-solver/vocab"
 )
 
 // nodeKind is what a node represents. The three kinds are not decoration —

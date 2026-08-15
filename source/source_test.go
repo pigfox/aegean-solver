@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pigfox/aegean-solver/internal/ferry"
+	"github.com/pigfox/aegean-solver/ferry"
 )
 
 // stub is a Source that returns exactly what a test tells it to. It exists so

@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pigfox/aegean-solver/ferry"
 	"github.com/pigfox/aegean-solver/internal/config"
-	"github.com/pigfox/aegean-solver/internal/ferry"
-	"github.com/pigfox/aegean-solver/internal/vocab"
+	"github.com/pigfox/aegean-solver/vocab"
 )
 
 // Everything below is a FIXTURE and not a schedule. The ports are called Alpha
@@ -401,7 +401,7 @@ func TestQueryRefusals(t *testing.T) {
 		{
 			name: "a horizon past the ceiling",
 			q: Query{Feed: good, Origin: "alpha", Destination: "beta", Depart: departAt(7, 0),
-				HorizonDays: config.MaxSearchHorizonDays + 1},
+				HorizonDays: MaxHorizonDays + 1},
 			want: ErrHorizon,
 		},
 	}
@@ -440,7 +440,7 @@ func TestTheHorizonDecidesWhetherAWeeklySailingExists(t *testing.T) {
 	}
 
 	wide := narrow
-	wide.HorizonDays = config.DefaultSearchHorizonDays
+	wide.HorizonDays = DefaultHorizonDays
 	got, err := EarliestArrival(wide)
 	if err != nil {
 		t.Fatalf("inside the default horizon: %v", err)
@@ -453,7 +453,7 @@ func TestTheHorizonDecidesWhetherAWeeklySailingExists(t *testing.T) {
 
 	// The ceiling itself is accepted; only past it is refused.
 	atCeiling := narrow
-	atCeiling.HorizonDays = config.MaxSearchHorizonDays
+	atCeiling.HorizonDays = MaxHorizonDays
 	if _, err := EarliestArrival(atCeiling); err != nil {
 		t.Fatalf("a horizon exactly at the ceiling was refused: %v", err)
 	}

@@ -6,7 +6,7 @@ import (
 
 	aegean "github.com/pigfox/aegean-solver"
 	"github.com/pigfox/aegean-solver/internal/config"
-	"github.com/pigfox/aegean-solver/internal/vocab"
+	"github.com/pigfox/aegean-solver/vocab"
 )
 
 // Feed is a whole schedule: every table, in one value.

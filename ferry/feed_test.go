@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/pigfox/aegean-solver/internal/config"
-	"github.com/pigfox/aegean-solver/internal/vocab"
+	"github.com/pigfox/aegean-solver/vocab"
 )
 
 // TestEmptyFeedIsValid is a REQUIREMENT and not a curiosity. The source
