@@ -1,18 +1,19 @@
 # aegean-solver
 
-Facility placement on the Aegean: where to put `p` supply depots among a few
-dozen island ports, solved two ways, with the difference between the two ways as
-the point.
+Two different questions about the same Aegean island ports, in one module with
+no dependencies outside the standard library, no server and no I/O.
 
-This is the solver core behind an interactive demo on pigfox.com. It has no
-dependencies outside the standard library, no server, and no I/O — a caller
-hands it sites and gets placements back.
+**Placement** — where to put `p` supply depots among a few dozen ports, solved
+two ways, with the difference between the two ways as the point. A caller hands
+it sites and gets placements back. This is the solver core behind the
+[Aegean placement demo](https://pigfox.com/demos/aegean-placement).
 
-> The demo page is being built. This README will carry its URL once the page is
-> live rather than before, because a link that 404s reads exactly like a link
-> that works until someone clicks it.
+**Routing** — leaving one port at a given moment, what is the earliest you can
+reach another, and by which sailings. This half ships the schema, the source
+boundary and the solver, and **ships no schedule**: see
+[Routing over a schedule](#routing-over-a-schedule).
 
-## Two problems, and why both are here
+## Placement: two problems, and why both are here
 
 | mode | question | objective | guarantee |
 |---|---|---|---|
@@ -93,19 +94,107 @@ Max-coverage is deterministic by construction and takes a seed only for a
 uniform signature. `TestGreedyIsSeedIndependent` asserts the seed changes
 nothing there, so an unseeded source creeping in shows up as a failure.
 
+## Routing over a schedule
+
+The placement half measures distance as a great circle, which is right for
+siting a depot and wrong for travel. A vessel cannot sail through an island,
+and — far more decisive here — a route served twice a week has a *waiting* time
+that dwarfs its sailing time. Miss Tuesday's boat and you do not arrive four
+hours late; you arrive on Friday. No distance metric expresses that, because the
+cost of an edge depends on when you reach it.
+
+`internal/tdsp` answers earliest arrival over a timetable. `internal/ferry` is
+the GTFS-shaped schema it reads, `internal/vocab` is the identity and vessel
+vocabulary, and `internal/source` is the boundary a schedule arrives through.
+
+### It ships no schedule data, deliberately
+
+There is not one port, one operator and not one sailing anywhere in these
+packages, and the empty feed is *valid* — `source.Empty` returns it and it
+passes `Validate()`. That is a requirement rather than an omission: building the
+consumer before any producer exists is what keeps invented rows out, because
+nobody ever needs to populate something merely to get the pipeline to run.
+
+Where real Aegean sailing times may legitimately be obtained from is an open
+question, and answering it by writing plausible-looking rows would have been the
+one unrecoverable mistake available here.
+
+### The model
+
+Every departure and every arrival is its own node at its own absolute instant,
+and an edge is a concrete thing a traveler can do: ride this sailing, stay
+aboard through this call, step ashore, wait, board. Waiting stops being a
+function and becomes a walk along a per-port chain.
+
+**FIFO does not hold, and does not need to.** A time-dependent network is FIFO
+when leaving later can never get you there earlier. A schedule graph violates
+that by construction — a fast catamaran departing at ten berths before a
+conventional ferry that sailed at nine — and it is stated rather than assumed
+away, because the assumption is common and quiet. It is also not needed: FIFO is
+what makes Dijkstra safe on the *compressed* formulation, where an arc carries a
+travel-time function. Nothing is compressed here. Every edge weight is a
+non-negative elapsed time between two fixed instants, which is the only property
+Dijkstra actually requires. Overtaking is simply two different nodes.
+
+**The cost is a pair.** Earliest arrival alone is degenerate on this graph:
+every edge weight is the difference of its endpoints' instants, so every path to
+a node costs the same and the search collapses into reachability in time order.
+Correct, still Dijkstra, and doing no work — and unable to prefer one way of
+arriving at ten o'clock over another. So the cost is lexicographic: arrival
+instant, then **number of legs**, where only boarding adds a leg and staying
+aboard through an intermediate call does not.
+
+**Departure nodes are not in the wait chain.** Staying aboard is a free edge
+from an arrival node straight to the departure node of the same sailing, because
+a traveler who never gets off needs no connection time. Put departure nodes in
+the per-port chain as well and that free edge lands them *in* the chain, from
+which any later departure is reachable without ever paying the minimum transfer
+— a vessel change with no time in between. Nothing crashes, every itinerary is
+still well formed, and the only symptom is answers that are slightly too good.
+`TestStayingAboardDoesNotBuyAFreeTransfer` plants exactly that arrangement.
+
+### What the routing tests measure
+
+```
+VERIFIED: 2000 generated schedules, 2000 compared against exhaustive enumeration
+(420 unreachable, 1154 single-sailing, 320 requiring a transfer, 106 origin
+equals destination, deepest itinerary 3 legs, 0 refused above the work ceiling).
+VERIFIED OVER: randomly generated schedules of 3-5 ports and 4-8 trips of 2-4
+calls, inside a 2-day horizon, in UTC. This is agreement on THESE instances and
+is a property of them, not of the method.
+```
+
+`BruteEarliestArrival` enumerates every itinerary and is ground truth for the
+Dijkstra result. The two are compared on the **cost pair**, not on the
+itinerary: where several journeys share a cost, both may return different ones
+and both are right, and asserting identical leg lists would assert that two
+tie-breaking rules coincide. The itinerary the solver returns is checked
+separately against the feed, by re-deriving each leg's instants from its service
+day.
+
+The outcome classes are **asserted, not just counted** — a run in which nothing
+was unreachable, or nothing needed a transfer, fails, because agreement between
+two searches that both refused everything establishes nothing about routing.
+
 ## What this does not do
 
-**No LP or MIP solver, and no dependency that is one.** Both modes are
+**No LP or MIP solver, and no dependency that is one.** Both placement modes are
 combinatorial heuristics over an explicit distance matrix. The exhaustive
 searches (`PMedianBrute`, `MaxCoverBrute`) exist to *verify* the heuristics at
 small sizes, and refuse with `ErrTooManyCombinations` rather than starting a
 search they cannot finish.
 
-**No chain, no network, no files.** Sites in, placements out.
+**No chain, no network, no files, no credentials.** Sites in, placements out;
+a schedule in, an itinerary out. Nothing in this module opens a connection or
+reads a key, and an origin that talks to the outside world would implement
+`source.Source` from its own package, where its dependencies are visible at its
+own import list.
 
 ## Coverage
 
-100% of statements, and there is no exclusion list. Where a defensive edge could
+100% of statements across every package, and there is no exclusion list. The
+`make cover` target **fails** below 100% and names each shortfall, rather than
+printing a percentage and exiting zero. Where a defensive edge could
 not be reached by any input — a haversine term above 1, an exhausted candidate
 heap, a zero worker count — the edge was pulled out into a named function with
 its own contract test rather than left inline as a branch that could only be
