@@ -1,6 +1,6 @@
 package tdsp
 
-import "github.com/pigfox/aegean-solver/internal/vocab"
+import "github.com/pigfox/aegean-solver/vocab"
 
 // bruteSearch enumerates itineraries exhaustively and keeps the best one.
 //

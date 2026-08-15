@@ -57,9 +57,9 @@ import (
 	"errors"
 	"time"
 
+	"github.com/pigfox/aegean-solver/ferry"
 	"github.com/pigfox/aegean-solver/internal/config"
-	"github.com/pigfox/aegean-solver/internal/ferry"
-	"github.com/pigfox/aegean-solver/internal/vocab"
+	"github.com/pigfox/aegean-solver/vocab"
 )
 
 // The errors a caller can act on.
@@ -90,7 +90,7 @@ type Query struct {
 	// Depart is the instant the traveler is first available at Origin.
 	Depart time.Time
 	// HorizonDays is how many days past Depart to search. Zero means
-	// config.DefaultSearchHorizonDays.
+	// DefaultHorizonDays; anything above MaxHorizonDays is ErrHorizon.
 	//
 	// ErrNoConnection IS RELATIVE TO THIS NUMBER and should be read that way. A
 	// weekly route missed by a day is unreachable inside a horizon of one and

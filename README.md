@@ -103,9 +103,18 @@ that dwarfs its sailing time. Miss Tuesday's boat and you do not arrive four
 hours late; you arrive on Friday. No distance metric expresses that, because the
 cost of an edge depends on when you reach it.
 
-`internal/tdsp` answers earliest arrival over a timetable. `internal/ferry` is
-the GTFS-shaped schema it reads, `internal/vocab` is the identity and vessel
-vocabulary, and `internal/source` is the boundary a schedule arrives through.
+`tdsp` answers earliest arrival over a timetable. `ferry` is the GTFS-shaped
+schema it reads, `vocab` is the identity and vessel vocabulary, and `source` is
+the boundary a schedule arrives through. All four are importable; only the
+shared tuning constants stay in `internal/config`, because nothing in an
+exported signature mentions them.
+
+```go
+feed := &ferry.Feed{Ports: …, Trips: …, Calendars: …}
+it, err := tdsp.EarliestArrival(tdsp.Query{
+    Feed: feed, Origin: "piraeus", Destination: "naxos", Depart: t,
+})
+```
 
 ### It ships no schedule data, deliberately
 

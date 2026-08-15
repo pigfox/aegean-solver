@@ -33,7 +33,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pigfox/aegean-solver/internal/ferry"
+	"github.com/pigfox/aegean-solver/ferry"
 )
 
 var (

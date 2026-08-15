@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/pigfox/aegean-solver/internal/config"
-	"github.com/pigfox/aegean-solver/internal/vocab"
+	"github.com/pigfox/aegean-solver/vocab"
 )
 
 // The fixtures below are the SHAPE of a schedule and not a schedule. Every

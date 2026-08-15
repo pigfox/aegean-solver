@@ -33,7 +33,7 @@ import (
 	"fmt"
 
 	"github.com/pigfox/aegean-solver/internal/config"
-	"github.com/pigfox/aegean-solver/internal/vocab"
+	"github.com/pigfox/aegean-solver/vocab"
 )
 
 // The errors a caller can act on. Every Validate wraps one of these with %w and

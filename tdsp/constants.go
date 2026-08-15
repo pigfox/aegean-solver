@@ -1,8 +1,8 @@
 package tdsp
 
 import (
+	"github.com/pigfox/aegean-solver/ferry"
 	"github.com/pigfox/aegean-solver/internal/config"
-	"github.com/pigfox/aegean-solver/internal/ferry"
 )
 
 // PriorServiceDays is how far BEFORE the query's own date the expansion reaches
@@ -22,6 +22,20 @@ import (
 // together, so raising the ceiling without widening the look-back fails the
 // build instead of quietly losing sailings.
 const PriorServiceDays = ferry.MaxStopTimeSeconds / config.SecondsPerDay
+
+// DefaultHorizonDays and MaxHorizonDays are the bounds on Query.HorizonDays.
+//
+// THEY ARE RE-EXPORTED HERE RATHER THAN LEFT IN internal/config, and the reason
+// is a contract that was otherwise incomplete: ErrHorizon is an exported error a
+// caller can be handed, and before this a caller who received it had no way to
+// discover which ceiling they had crossed. Two constants on the package that
+// owns the field close that; moving the whole config package out to expose two
+// numbers would have widened the surface for no gain. Nothing else in
+// internal/config appears in any exported signature.
+const (
+	DefaultHorizonDays = config.DefaultSearchHorizonDays
+	MaxHorizonDays     = config.MaxSearchHorizonDays
+)
 
 // MaxExhaustiveStates bounds the verifier, not the solver.
 //
